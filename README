@@ -1,15 +1,19 @@
 Config-YAML-Modern
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Modern YAML-based config loader from file or directory.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+Config::YAML::Modern created to get dial with yaml-based configuration.
+Its possible to load single file, or all files in one directory (without recursion search).
+
+Data from many files was be merged properly (almost), also filename was be converted
+to top-level hash keys.
+
+Filename like 'file.data.yaml' was be converted to { file => { data => $file_content } }.
+
+Also module provide perfect dive() interface form Data::Diver.
+It may be used like 
+
+		my $file_content = $conf_object->dive(qw/file data/);
 
 
 INSTALLATION

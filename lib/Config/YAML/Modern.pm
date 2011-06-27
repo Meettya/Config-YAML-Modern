@@ -1,53 +1,366 @@
 package Config::YAML::Modern;
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 
 =head1 NAME
 
-Config::YAML::Modern - The great new Config::YAML::Modern!
+Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.15
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.15';
+$VERSION = eval $VERSION;
 
+# develop mode only
+# use Smart::Comments;
+
+# die beautiful
+use Carp qw/croak/;
+
+# too match for directory-based loader
+use File::Basename qw/dirname fileparse/;
+use File::Spec;
+use File::Glob qw/:glob/;
+
+# srsly who care about your YAML lib :) I`nt!
+use YAML::Any qw/LoadFile/;
+
+# its for correct hash creation + for data mining
+use Data::Diver qw/DiveVal DiveDie/;
+
+# so, its smartest way for Merge hash
+use Hash::Merge;
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+Config::YAML::Modern created to get dial with yaml-based configuration.
+Its possible to load single file, or all files in one directory (without recursion search).
+Data from many files was be merged properly (almost), also filename was be converted
+to top-level hash keys.
+Filename like 'file.data.yaml' was be converted to { file => { data => $file_content } }.
+Also module provide perfect dive() interface form Data::Diver.
+It may be used like 
 
-Perhaps a little code snippet.
+		my $file_content = $conf_object->dive(qw/file data/);
+	
+
+Simply usage for file load
 
     use Config::YAML::Modern;
 
-    my $foo = Config::YAML::Modern->new();
-    ...
+    my $config = Config::YAML::Modern->new();
+    
+    my $filename = 'test.yaml';
+    
+    $config->file_load($filename);
+    
+    my $data = $config->config();
 
-=head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+More complicated for directory-based loading
+
+    my $config2 = Config::YAML::Modern->new( key_conversation => ucfirst );
+    
+    my $directory = '/etc/my_app/';
+    
+    # slurp all data to hashref
+    my $data2 = $config2->dir_load($directory)->config();
+    
+    # but exist more sophisticated path
+    my @list_of_key = (qw/Model Message 0 author/);
+    my $data3 = $config2->dive(@list_of_key);
+    
+    # $data3 == $data2->{Model}{Message}[0]{author}
+
+
+=cut
+
+# our error text for sprintf
+my $err_text =  [
+		qq( filename is required ),
+		qq( file |%s| is not exists ),
+		qq( dont know |%s| conversation ),
+		qq( error on parsing file |%s| with message: %s ),
+		qq( directory name is required ),
+		qq( directory |%s| is not exists ),
+		qq( suffix is required, or you must set 'i_dont_use_suffix property' ),
+		qq( no one file matched with |%s| pattern at |%s| directory ),
+		qq( call with empty args deprecated )
+	];
+
+
+# its our private subs
+my ( $key_conversation, $get_files_list );
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=cut
+
+=head2 new
+
+new( [ list of args ] ) - create Config::YAML::Modern object and return it.
+
+		my $config = Config::YAML::Modern->new();
+
+The options currently supported are:
+
+=over
+
+=item C<merge_behavior>
+behavior on merge data, see L<Hash::Merge> docs. 'LEFT_PRECEDENT' by default.
+
+=item C<file_suffix>
+File suffix, used in search files in directory for matching. '.yaml' by default.
+
+=item C<key_conversation>
+Rule for conversation parts of filename to hash keys.
+Available [undef, uc, ucfirst, lc, lcfirst]. No conversation 'undef' by default.
+
+=item C<i_dont_use_suffix>
+Set to true if you not use suffix on config files. Suffix used by default - 'undef'.
+
+=item C<load_return_data>
+If setted to true, file_load() & dir_load() methods returns dataset instead of $self,
+returned by default - 'undef'.
+
+=back
 
 =cut
 
-sub function1 {
+sub new{
+		
+	my $class = shift;
+	my $arg		= {
+					__config						=> {},
+					merge_behavior		=> 'LEFT_PRECEDENT',
+					file_suffix				=> '.yaml',
+					key_conversation	=> undef,
+					i_dont_use_suffix	=> undef,
+					load_return_data  => undef,
+					@_	
+	};	
+  my $self = bless( $arg , ref $class || $class );
+  
+  return $self;
 }
 
-=head2 function2
+=head2 file_load
+
+file_load($filename) - load data from yaml-contained file
+
+		$config->file_load($filename);
 
 =cut
 
-sub function2 {
+sub file_load {
+	my $self = shift;
+	my $filename = shift;
+	
+	unless ( defined $filename ){
+		croak sprintf $err_text->[0];
+	}
+	
+	unless ( -e $filename ){
+		croak sprintf $err_text->[1], $filename;
+	}
+	
+	# this block for filename to hash key resolving
+	# et my.config.yaml -> { my => { config => { $data_here } } }
+	my ( $filename_for_hash, undef, $suffix ) = fileparse( $filename , qr/\.[^.]*/ );		
+	my @file_part = split m/\./, $filename_for_hash ;
+	
+	# I care about all of you, but it bad practice!!!
+	if ( defined $self->{'i_dont_use_suffix'} ){
+		$suffix =~ s/^\.//;
+		push @file_part, $suffix;
+	}
+	
+	# if we are need key conversation
+	my $key_conv = $self->{key_conversation};
+	@file_part = $key_conversation->($key_conv, @file_part ) if ( defined $key_conv );
+	
+	# now we are go to load file
+	my $config_value = {};
+	eval { DiveVal( $config_value, @file_part ) = LoadFile( $filename ) };
+	
+	croak sprintf $err_text->[3], $filename, $@ while ($@);
+	
+	# for dir_load, or you are may use it, if you want
+	return $config_value while ( defined $self->{load_return_data} );
+	
+	# or get classical $self for chaining
+	$self->{'__config'} = $config_value;	
+	return $self;
+	
 }
+
+=begin comment key_conversation
+
+subroutine for convert filepart
+
+=end comment
+
+=cut
+
+$key_conversation = sub {
+
+	my $key_conv = shift;
+	my @part_in = @_;
+	my @part_out;
+	
+	# yes! it`s noisy and ugly, get 5.14 and it will by pretty	
+	if ( $key_conv eq 'uc' ){
+		@part_out = map{ uc $_ } @part_in;
+	}
+	elsif ( $key_conv eq 'ucfirst' ){
+		@part_out = map{ ucfirst $_ } @part_in;
+	}
+	elsif ( $key_conv eq 'lc' ){
+		@part_out = map{ lc $_ } @part_in;
+	}
+	elsif ( $key_conv eq 'lcfirst' ){ 	# ok, but why???
+		@part_out = map{ lcfirst $_ } @part_in;
+	}
+	else { # add another one by yourself or get error
+		croak sprintf $err_text->[2], $key_conv;
+	}
+	
+	return @part_out;
+};
+
+=head2 config
+
+config() - return all config data from object
+
+		my $data = $config->config();
+
+=cut
+
+sub config {
+	my $self = shift;
+	return $self->{'__config'};
+}
+
+=head2 dir_load
+
+dir_load($directory) - get files from directory, load data and merge it together
+
+		$config2->dir_load($directory);
+
+=cut
+
+sub dir_load {
+	my $self 	= shift;
+	my $dir 	= shift;
+	
+	unless ( defined $dir ){
+		croak sprintf $err_text->[4];
+	}
+	
+	unless ( -d $dir ){
+		croak sprintf $err_text->[5], $dir;
+	}
+	
+	my @file_list = $get_files_list->($self, $dir);
+	
+	# its hack, but I`m not shined
+	my $return_data_flag =  $self->{'load_return_data'};
+	$self->{'load_return_data'} = 1;
+	
+	#ok, little-by-little take our config
+	my %result;
+	
+	# LEFT_PRECEDENT is almost right way
+	my $merger = Hash::Merge->new( $self->{'merge_behavior'} );
+
+	foreach my $full_filename ( @file_list ){
+	
+		my $temp_val = $self->file_load($full_filename);
+		
+		# make smart deep merge
+		%result = %{ $merger->merge( \%result, $temp_val ) };
+	
+	}
+	
+	# change it back
+	$self->{'load_return_data'} = $return_data_flag;
+	
+	# you are may use it, if you want
+	return \%result while ( defined $self->{load_return_data} );
+	
+	# or get classical $self for chaining
+	$self->{'__config'} = \%result;	
+	return $self;
+}
+
+=begin comment get_files_list
+
+subroutine for get all files from directory
+
+=end comment
+
+=cut
+
+$get_files_list = sub {
+	my $self 	= shift;
+	my $dir 	= shift;
+	
+	my $glob = '*.';
+	
+	if (! defined $self->{'i_dont_use_suffix'} ){
+	
+		croak sprintf $err_text->[6] unless ( defined $self->{'file_suffix'} );
+		# just throw out the dot
+		my ( $suffix ) = $self->{'file_suffix'} =~ /([^.]+)$/ ;
+		$glob .= $suffix;
+		
+	}
+	else {
+		$glob .= '*';
+	}
+
+	my $full_pattern = File::Spec->catfile( $dir, $glob );
+	
+	# get all files in our dir
+	# REMEMBER!! no recursive search and e.t.c. - just plain dir scan!!!
+	my @file_list = bsd_glob( $full_pattern );
+	
+	croak sprintf $err_text->[7], $glob, $dir while ( $#file_list < 0 ); 
+	
+	return @file_list;
+
+};
+
+=head2 dive
+
+dive(@list_of_key) - return data from object by @list_of_key patch resolution
+
+		my $data3 = $config2->dive(@list_of_key);
+
+Just wrapper ontop of L<Data::Diver/"DiveDie">
+
+=cut
+
+sub dive {
+	my $self 					= shift;
+	my @list_of_key 	= @_;
+	
+	croak sprintf $err_text->[8]  while ( $#list_of_key < 0 ); 
+	
+	my $value = DiveDie( $self->{'__config'} , @list_of_key );
+	
+	return $value;	
+}
+
+=head1 EXPORT
+
+Nothing by default.
 
 =head1 AUTHOR
 
@@ -58,8 +371,6 @@ Meettya, C<< <meettya at cpan.org> >>
 Please report any bugs or feature requests to C<bug-config-yaml-modern at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Config-YAML-Modern>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-
 
 
 =head1 SUPPORT
