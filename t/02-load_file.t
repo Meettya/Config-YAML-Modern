@@ -27,7 +27,6 @@ ok ( ! eval{ $config->file_load('./this_file_cant_be_exists') } && $@ ,
 note('try to load data from file');
 my $config2 = new_ok( 
 						$class_name => [ 'key_conversation' => 'ucfirst' , 
-														# 'load_return_data' => 1
 														]
 						, $class_name );
 
@@ -44,7 +43,7 @@ ok ( $return_object = $config2->file_load($path), 'load file' );
 is_deeply( $config2, $return_object, 'return object matched' );
 
 my $config3 = $class_name->new( 'key_conversation' => 'ucfirst' , 
-														    'load_return_data' => 1 
+														    '__force_return_data' => 1 
 														);
 
 my $return_data = $config3->file_load($path);

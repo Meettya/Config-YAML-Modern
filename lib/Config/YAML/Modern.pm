@@ -10,15 +10,15 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.15
+Version 0.21
 
 =cut
 
-our $VERSION = '0.15';
+our $VERSION = '0.21';
 $VERSION = eval $VERSION;
 
 # develop mode only
-# use Smart::Comments;
+ use Smart::Comments;
 
 # die beautiful
 use Carp qw/croak/;
@@ -91,7 +91,9 @@ my $err_text =  [
 		qq( directory |%s| is not exists ),
 		qq( suffix is required, or you must set 'i_dont_use_suffix property' ),
 		qq( no one file matched with |%s| pattern at |%s| directory ),
-		qq( call with empty args deprecated )
+		qq( call with empty args deprecated ),
+		qq( only hashref are allowed ),
+		
 	];
 
 
@@ -125,9 +127,10 @@ Available [undef, uc, ucfirst, lc, lcfirst]. No conversation 'undef' by default.
 =item C<i_dont_use_suffix>
 Set to true if you not use suffix on config files. Suffix used by default - 'undef'.
 
-=item C<load_return_data>
-If setted to true, file_load() & dir_load() methods returns dataset instead of $self,
-returned by default - 'undef'.
+=item C<__force_return_data>
+If setted to true, methods: file_load, dir_load, hash_add, file_add and die_add
+returns dataset instead of $self, returned by default - 'undef'.
+!!! important - in this case loaded or added data are NOT BE STORED in object, use it well
 
 =back
 
@@ -142,9 +145,10 @@ sub new{
 					file_suffix				=> '.yaml',
 					key_conversation	=> undef,
 					i_dont_use_suffix	=> undef,
-					load_return_data  => undef,
+					__force_return_data  => undef,
 					@_	
-	};	
+	};
+	
   my $self = bless( $arg , ref $class || $class );
   
   return $self;
@@ -192,7 +196,7 @@ sub file_load {
 	croak sprintf $err_text->[3], $filename, $@ while ($@);
 	
 	# for dir_load, or you are may use it, if you want
-	return $config_value while ( defined $self->{load_return_data} );
+	return $config_value while ( defined $self->{__force_return_data} );
 	
 	# or get classical $self for chaining
 	$self->{'__config'} = $config_value;	
@@ -270,8 +274,8 @@ sub dir_load {
 	my @file_list = $get_files_list->($self, $dir);
 	
 	# its hack, but I`m not shined
-	my $return_data_flag =  $self->{'load_return_data'};
-	$self->{'load_return_data'} = 1;
+	my $return_data_flag =  $self->{'__force_return_data'};
+	$self->{'__force_return_data'} = 1;
 	
 	#ok, little-by-little take our config
 	my %result;
@@ -289,10 +293,10 @@ sub dir_load {
 	}
 	
 	# change it back
-	$self->{'load_return_data'} = $return_data_flag;
+	$self->{'__force_return_data'} = $return_data_flag;
 	
 	# you are may use it, if you want
-	return \%result while ( defined $self->{load_return_data} );
+	return \%result while ( defined $self->{__force_return_data} );
 	
 	# or get classical $self for chaining
 	$self->{'__config'} = \%result;	
@@ -357,6 +361,107 @@ sub dive {
 	
 	return $value;	
 }
+
+=head2 hash_add
+
+hash_add($hash_ref, $behavior? ) - add data to object from hash with $behavior resolution, or use default behavior.
+
+		my $data3 = $config2->hash_add( $hash_ref, 'RIGHT_PRECEDENT' );
+
+Just wrapper ontop of L<Hash::Merge/"merge">
+
+=cut
+
+sub hash_add {
+	my $self 			= shift;
+	my $hash_ref	= shift;
+	my $behavior  = shift;
+	
+	croak sprintf $err_text->[8] unless ( defined $hash_ref );
+	
+	croak sprintf $err_text->[9] unless ( ref $hash_ref eq 'HASH');
+	
+	# LEFT_PRECEDENT is almost right way
+	my $merger = Hash::Merge->new( $behavior || $self->{'merge_behavior'} );
+
+	# make smart deep merge
+	my %result = %{ $merger->merge( $self->{'__config'}, $hash_ref ) };
+
+	# you are may use it, if you want
+	return \%result while ( defined $self->{__force_return_data} );
+	
+	# or get classical $self for chaining
+	$self->{'__config'} = \%result;	
+	return $self;
+	
+	}
+
+=head2 file_add
+
+file_add($filename, $behavior? ) - add data to object from file with $behavior resolution, or use default behavior.
+
+		my $data3 = $config2->file_add( $filename3, 'RIGHT_PRECEDENT' );
+
+=cut
+	
+sub file_add{
+	my $self 			= shift;
+	my $filename	= shift;
+	my $behavior  = shift;
+
+	# its hack, but I`m not shined
+	my $return_data_flag =  $self->{'__force_return_data'};
+	$self->{'__force_return_data'} = 1;
+	
+	my $temp_val = $self->file_load( $filename );
+	
+	my $result = $self->hash_add( $temp_val, $behavior );
+	
+	# change it back
+	$self->{'__force_return_data'} = $return_data_flag;
+	
+	# you are may use it, if you want
+	return $result while ( defined $self->{__force_return_data} );
+	
+	# or get classical $self for chaining
+	$self->{'__config'} = $result;	
+	return $self;
+
+}
+
+=head2 dir_add
+
+file_add($dir_name, $behavior? ) - add data to object from directory with $behavior resolution, or use default behavior.
+
+		my $data3 = $config2->dir_add( $dir_name2, 'RETAINMENT_PRECEDENT' );
+
+=cut
+	
+sub dir_add{
+	my $self 			= shift;
+	my $dir_name	= shift;
+	my $behavior  = shift;
+
+	# its hack, but I`m not shined
+	my $return_data_flag =  $self->{'__force_return_data'};
+	$self->{'__force_return_data'} = 1;
+	
+	my $temp_val = $self->dir_load( $dir_name );
+	
+	my $result = $self->hash_add( $temp_val, $behavior );
+	
+	# change it back
+	$self->{'__force_return_data'} = $return_data_flag;
+	
+	# you are may use it, if you want
+	return $result while ( defined $self->{__force_return_data} );
+	
+	# or get classical $self for chaining
+	$self->{'__config'} = $result;	
+	return $self;
+
+}
+
 
 =head1 EXPORT
 

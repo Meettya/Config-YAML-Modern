@@ -40,7 +40,7 @@
    "provides" : {
       "Config::YAML::Modern" : {
          "file" : "lib/Config/YAML/Modern.pm",
-         "version" : "0.15"
+         "version" : "0.21"
       }
    },
    "release_status" : "stable",
@@ -49,5 +49,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.15"
+   "version" : "0.21"
 }
