@@ -1,5 +1,8 @@
 Revision history for Config-YAML-Modern
 
+0.23	2011/06/27
+	Fix misstyping key_conversation -> key_conversion property
+
 0.21	2011/06/27
 	Add methods: hash_add, file_add, dir_add.
 	Improve test and documentation

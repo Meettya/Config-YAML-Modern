@@ -15,7 +15,7 @@ BEGIN { use_ok('Config::YAML::Modern') };
 
 my $class_name = 'Config::YAML::Modern';
 
-my $config = new_ok( $class_name => [ 'key_conversation' => 'ucfirst' ],
+my $config = new_ok( $class_name => [ 'key_conversion' => 'ucfirst' ],
 										 $class_name );
 
 ok ( ! eval{ $config->dir_load() } && $@ , 'void call' );
@@ -45,7 +45,7 @@ ok ( $config->dir_load($path), 'load directory' );
 note('check files without suffix');
 
 my $config2 = new_ok( $class_name => [ 
-													'key_conversation' => 'ucfirst',
+													'key_conversion' => 'ucfirst',
 													'i_dont_use_suffix'=> 1
 													],
 										 $class_name );
@@ -58,7 +58,7 @@ my $filename = 'check.file';
 my $path3 = File::Spec->catfile( @directories, $filename );
 
 my $config3 = new_ok( $class_name => [ 
-													'key_conversation' => 'ucfirst',
+													'key_conversion' => 'ucfirst',
 													'i_dont_use_suffix'=> 1
 													],
 										 $class_name );

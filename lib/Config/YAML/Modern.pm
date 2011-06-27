@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.21
+Version 0.23
 
 =cut
 
-our $VERSION = '0.21';
+our $VERSION = '0.23';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -65,7 +65,7 @@ Simply usage for file load
 
 More complicated for directory-based loading
 
-    my $config2 = Config::YAML::Modern->new( key_conversation => ucfirst );
+    my $config2 = Config::YAML::Modern->new( key_conversion => ucfirst );
     
     my $directory = '/etc/my_app/';
     
@@ -85,7 +85,7 @@ More complicated for directory-based loading
 my $err_text =  [
 		qq( filename is required ),
 		qq( file |%s| is not exists ),
-		qq( dont know |%s| conversation ),
+		qq( dont know |%s| conversion ),
 		qq( error on parsing file |%s| with message: %s ),
 		qq( directory name is required ),
 		qq( directory |%s| is not exists ),
@@ -98,7 +98,7 @@ my $err_text =  [
 
 
 # its our private subs
-my ( $key_conversation, $get_files_list );
+my ( $key_conversion, $get_files_list );
 
 =head1 SUBROUTINES/METHODS
 
@@ -120,9 +120,9 @@ behavior on merge data, see L<Hash::Merge> docs. 'LEFT_PRECEDENT' by default.
 =item C<file_suffix>
 File suffix, used in search files in directory for matching. '.yaml' by default.
 
-=item C<key_conversation>
-Rule for conversation parts of filename to hash keys.
-Available [undef, uc, ucfirst, lc, lcfirst]. No conversation 'undef' by default.
+=item C<key_conversion>
+Rule for conversion parts of filename to hash keys.
+Available [undef, uc, ucfirst, lc, lcfirst]. No conversion 'undef' by default.
 
 =item C<i_dont_use_suffix>
 Set to true if you not use suffix on config files. Suffix used by default - 'undef'.
@@ -143,7 +143,7 @@ sub new{
 					__config						=> {},
 					merge_behavior		=> 'LEFT_PRECEDENT',
 					file_suffix				=> '.yaml',
-					key_conversation	=> undef,
+					key_conversion	=> undef,
 					i_dont_use_suffix	=> undef,
 					__force_return_data  => undef,
 					@_	
@@ -186,8 +186,8 @@ sub file_load {
 	}
 	
 	# if we are need key conversation
-	my $key_conv = $self->{key_conversation};
-	@file_part = $key_conversation->($key_conv, @file_part ) if ( defined $key_conv );
+	my $key_conv = $self->{key_conversion};
+	@file_part = $key_conversion->($key_conv, @file_part ) if ( defined $key_conv );
 	
 	# now we are go to load file
 	my $config_value = {};
@@ -204,7 +204,7 @@ sub file_load {
 	
 }
 
-=begin comment key_conversation
+=begin comment key_conversion
 
 subroutine for convert filepart
 
@@ -212,7 +212,7 @@ subroutine for convert filepart
 
 =cut
 
-$key_conversation = sub {
+$key_conversion = sub {
 
 	my $key_conv = shift;
 	my @part_in = @_;

@@ -16,7 +16,7 @@ BEGIN { use_ok('Config::YAML::Modern') };
 my $class_name = 'Config::YAML::Modern';
 
 my $args = [
- 			'key_conversation' => 'ucfirst',
+ 			'key_conversion' => 'ucfirst',
  			'i_dont_use_suffix' => 1
 				];
 

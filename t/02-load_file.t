@@ -26,7 +26,7 @@ ok ( ! eval{ $config->file_load('./this_file_cant_be_exists') } && $@ ,
 # load file
 note('try to load data from file');
 my $config2 = new_ok( 
-						$class_name => [ 'key_conversation' => 'ucfirst' , 
+						$class_name => [ 'key_conversion' => 'ucfirst' , 
 														]
 						, $class_name );
 
@@ -42,7 +42,7 @@ ok ( $return_object = $config2->file_load($path), 'load file' );
 
 is_deeply( $config2, $return_object, 'return object matched' );
 
-my $config3 = $class_name->new( 'key_conversation' => 'ucfirst' , 
+my $config3 = $class_name->new( 'key_conversion' => 'ucfirst' , 
 														    '__force_return_data' => 1 
 														);
 
@@ -55,7 +55,7 @@ note ('try to load from file without suffix');
 my $file_name2 = 'another.file';
 my $path2 = File::Spec->catfile( @directories, $file_name2 );
 
-my $config4 = $class_name->new( 'key_conversation' => 'ucfirst' , 
+my $config4 = $class_name->new( 'key_conversion' => 'ucfirst' , 
 														    'i_dont_use_suffix' => 1 
 														);
 
