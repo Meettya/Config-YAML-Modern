@@ -10,15 +10,15 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.23
+Version 0.25
 
 =cut
 
-our $VERSION = '0.23';
+our $VERSION = '0.25';
 $VERSION = eval $VERSION;
 
 # develop mode only
- use Smart::Comments;
+# use Smart::Comments;
 
 # die beautiful
 use Carp qw/croak/;
@@ -65,7 +65,7 @@ Simply usage for file load
 
 More complicated for directory-based loading
 
-    my $config2 = Config::YAML::Modern->new( key_conversion => ucfirst );
+    my $config2 = Config::YAML::Modern->new( key_conversion => 'ucfirst' );
     
     my $directory = '/etc/my_app/';
     
