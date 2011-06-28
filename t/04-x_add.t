@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 9;
+use Test::More tests => 13;
 #use Test::More qw( no_plan );
 
 # for filename resolution
@@ -25,6 +25,8 @@ my $config1 = new_ok( $class_name => $args, $class_name );
 my $config2 = new_ok( $class_name => $args, $class_name);
 
 my $config_check = new_ok( $class_name => $args, $class_name );
+
+my $config_for_empty = new_ok( $class_name => $args, $class_name );
 										 
 my $data_dir = 'data';
 my $data_sub_dir = 'subdata';
@@ -51,11 +53,12 @@ note('merge data by hash_add');
 ok ( ! eval { $config1->hash_add() } && $@ , 'empty hash_add depricated');
 ok ( ! eval { $config1->hash_add(['one', 'two']) } && $@ , 'not hash at hash_add depricated');
 
+
 $config1->hash_add($config2->config());
 
 is_deeply( $config1->dive(qw/Another/),
 					 $config_check->dive(qw/Check/), 
-					 'object merged by hash_add propertly' );
+					 'object merged by hash_add properly' );
 
 #re-use object and check file_add	 
 note('merge data by file_add');
@@ -64,7 +67,7 @@ $config1->file_load($path_file2)->file_add($path_file1, 'RIGHT_PRECEDENT' );
 
 is_deeply( $config1->dive(qw/Another/),
 					 $config_check->dive(qw/Check/), 
-					 'object merged by file_add propertly' );
+					 'object merged by file_add properly' );
 
 #re-use object and check dir_add	 
 note('merge data by dir_add');
@@ -76,4 +79,27 @@ $config1->file_load($path_file2)->dir_add($path_dir, 'RIGHT_PRECEDENT');
 
 is_deeply( $config1->dive(qw/Another/),
 					 $config_check->dive(qw/Check/), 
-					 'object merged by dir_add propertly' );
+					 'object merged by dir_add properly' );
+					 
+note('check empty root hash correct addition');
+
+my $fulled_hash = { c => 4, d => 5 };
+my $empty_hash	= {};
+
+$config_for_empty->hash_add($empty_hash);
+
+is_deeply( $config_for_empty->config(),
+					 $empty_hash, 
+					 'empty object & empty hash merged properly' );
+
+$config_for_empty->hash_add($fulled_hash);
+
+is_deeply( $config_for_empty->config(),
+					 $fulled_hash, 
+					 'empty object & fulled hash merged properly' );
+					 
+$config_for_empty->hash_add($empty_hash);
+
+is_deeply( $config_for_empty->config(),
+					 $fulled_hash, 
+					 'fulled object & empty hash merged properly' );

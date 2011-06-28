@@ -1,5 +1,9 @@
 Revision history for Config-YAML-Modern
 
+0.29		2011/06/28
+				Fix methods: hash_add, file_add, dir_add  - 
+				in case of empty 'winner' hash now object not been vanished anymore.
+
 0.27		2011/06/28
 				Fix method dive - now its wrapper on Data::Diver->Dive and allow wrong/non-existanse path
 				Add strict version dive_die - its wrapper on Data::Diver->DiveDie and die if path wrong/non-existanse.

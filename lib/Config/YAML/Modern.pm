@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.27
+Version 0.29
 
 =cut
 
-our $VERSION = '0.27';
+our $VERSION = '0.29';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -128,9 +128,16 @@ Available [undef, uc, ucfirst, lc, lcfirst]. No conversion 'undef' by default.
 Set to true if you not use suffix on config files. Suffix used by default - 'undef'.
 
 =item C<__force_return_data>
-If setted to true, methods: file_load, dir_load, hash_add, file_add and die_add
+If setted to true, methods: file_load(), dir_load(), hash_add(), file_add() and dir_add()
 returns dataset instead of $self, returned by default - 'undef'.
 !!! important - in this case loaded or added data are NOT BE STORED in object, use it well
+
+=itemc<ignore_empty_file>
+If setted to true method:
+	- file_load() will return or assign to object empty flat hash without created keys by file name - just {}.
+	- dir_load() will ignore empty files and not been add keys by names of empty files at all
+	- file_add() and dir_add() will ignore empty files and not use it in merge process
+By default empty files NOT ignored, value by default - 'undef'.
 
 =back
 
@@ -140,12 +147,13 @@ sub new{
 		
 	my $class = shift;
 	my $arg		= {
-					__config						=> {},
-					merge_behavior		=> 'LEFT_PRECEDENT',
-					file_suffix				=> '.yaml',
-					key_conversion	=> undef,
-					i_dont_use_suffix	=> undef,
-					__force_return_data  => undef,
+					__config							=> {},
+					merge_behavior				=> 'LEFT_PRECEDENT',
+					file_suffix						=> '.yaml',
+					key_conversion				=> undef,
+					i_dont_use_suffix			=> undef,
+					__force_return_data  	=> undef,
+					ignore_empty_file			=> undef,
 					@_	
 	};
 	
@@ -182,7 +190,8 @@ sub file_load {
 	# I care about all of you, but it bad practice!!!
 	if ( defined $self->{'i_dont_use_suffix'} ){
 		$suffix =~ s/^\.//;
-		push @file_part, $suffix;
+		# fix empty key addition
+		push @file_part, $suffix if ( $suffix ne '' );
 	}
 	
 	# if we are need key conversation
@@ -190,10 +199,20 @@ sub file_load {
 	@file_part = $key_conversion->($key_conv, @file_part ) if ( defined $key_conv );
 	
 	# now we are go to load file
-	my $config_value = {};
-	eval { DiveVal( $config_value, @file_part ) = LoadFile( $filename ) };
+	my $config_value = {};	
+	my $temp_val;
+	
+	eval { $temp_val = LoadFile( $filename ) };
 	
 	croak sprintf $err_text->[3], $filename, $@ while ($@);
+	
+	DiveVal( $config_value, @file_part )  = $temp_val;
+	
+	# return empty hash if file empty to suppress vanish data by empty file 
+	if ( ! defined $temp_val &&  defined $self->{'ignore_empty_file'} ){
+			
+			$config_value = {};
+	}
 	
 	# for dir_load, or you are may use it, if you want
 	return $config_value while ( defined $self->{__force_return_data} );
@@ -286,6 +305,9 @@ sub dir_load {
 	foreach my $full_filename ( @file_list ){
 	
 		my $temp_val = $self->file_load($full_filename);
+		
+		# just ignore empty files
+		next if ( ! scalar keys %$temp_val && defined $self->{'ignore_empty_file'} );
 		
 		# make smart deep merge
 		%result = %{ $merger->merge( \%result, $temp_val ) };
@@ -434,9 +456,16 @@ sub file_add{
 	my $return_data_flag =  $self->{'__force_return_data'};
 	$self->{'__force_return_data'} = 1;
 	
+	my $result;
 	my $temp_val = $self->file_load( $filename );
-	
-	my $result = $self->hash_add( $temp_val, $behavior );
+
+	# just ignore empty files
+	if ( ! scalar keys %$temp_val && defined $self->{'ignore_empty_file'} ){
+		$result = $self->{'__config'};
+	}
+	else {
+		$result = $self->hash_add( $temp_val, $behavior );
+	}
 	
 	# change it back
 	$self->{'__force_return_data'} = $return_data_flag;
@@ -467,9 +496,17 @@ sub dir_add{
 	my $return_data_flag =  $self->{'__force_return_data'};
 	$self->{'__force_return_data'} = 1;
 	
+	my $result;
 	my $temp_val = $self->dir_load( $dir_name );
-	
-	my $result = $self->hash_add( $temp_val, $behavior );
+
+	# just ignore empty files
+	if ( ! scalar keys %$temp_val && defined $self->{'ignore_empty_file'} ){
+		
+		$result = $self->{'__config'};
+	}
+	else {	
+		$result = $self->hash_add( $temp_val, $behavior );
+	}
 	
 	# change it back
 	$self->{'__force_return_data'} = $return_data_flag;

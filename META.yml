@@ -16,7 +16,7 @@ name: Config-YAML-Modern
 provides:
   Config::YAML::Modern:
     file: lib/Config/YAML/Modern.pm
-    version: 0.27
+    version: 0.29
 requires:
   Carp: 1.2
   Data::Diver: 1.0101
@@ -28,4 +28,4 @@ requires:
   perl: 5.008
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.27
+version: 0.29
