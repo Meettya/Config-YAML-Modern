@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 9;
+use Test::More tests => 12;
 #use Test::More qw( no_plan );
 
 # for filename resolution
@@ -60,3 +60,11 @@ my $config4 = $class_name->new( 'key_conversion' => 'ucfirst' ,
 														);
 
 ok ( $config4->file_load($path2), 'load file without suffix' );
+
+note('check dive & dive_die');
+
+is ( $config2->dive(qw/File One hash key2/), 'value2' , 'exists data dived' );
+
+is ( $config2->dive(qw/File One hash_newer_exists key2 fooo baaarrr foo /), undef , 'non-exists data dived' );
+
+ok ( ! eval{ $config2->dive_die(qw/File One hash_newer_exists key2 fooo baaarrr foo /)} && $@, 'die on non-exists data with dive_die' );

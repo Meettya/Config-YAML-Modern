@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.25
+Version 0.27
 
 =cut
 
-our $VERSION = '0.25';
+our $VERSION = '0.27';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -32,7 +32,7 @@ use File::Glob qw/:glob/;
 use YAML::Any qw/LoadFile/;
 
 # its for correct hash creation + for data mining
-use Data::Diver qw/DiveVal DiveDie/;
+use Data::Diver qw/DiveVal DiveDie Dive/;
 
 # so, its smartest way for Merge hash
 use Hash::Merge;
@@ -343,15 +343,36 @@ $get_files_list = sub {
 
 =head2 dive
 
-dive(@list_of_key) - return data from object by @list_of_key patch resolution
+dive(@list_of_key) - return data from object by @list_of_key patch resolution, return "undef" if path resolution wrong.
 
 		my $data3 = $config2->dive(@list_of_key);
+
+Just wrapper ontop of L<Data::Diver/"Dive">
+
+=cut
+
+sub dive {
+	my $self 					= shift;
+	my @list_of_key 	= @_;
+	
+	croak sprintf $err_text->[8]  while ( $#list_of_key < 0 ); 
+	
+	my $value = Dive( $self->{'__config'} , @list_of_key );
+	
+	return $value;	
+}
+
+=head2 dive_die
+
+dive_die(@list_of_key) - return data from object by @list_of_key patch resolution, and do "die" if path resolution wrong.
+
+		my $data3 = $config2->dive_die(@list_of_key);
 
 Just wrapper ontop of L<Data::Diver/"DiveDie">
 
 =cut
 
-sub dive {
+sub dive_die {
 	my $self 					= shift;
 	my @list_of_key 	= @_;
 	

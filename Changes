@@ -1,11 +1,15 @@
 Revision history for Config-YAML-Modern
 
-0.23	2011/06/27
-	Fix misstyping key_conversation -> key_conversion property
+0.27		2011/06/28
+				Fix method dive - now its wrapper on Data::Diver->Dive and allow wrong/non-existanse path
+				Add strict version dive_die - its wrapper on Data::Diver->DiveDie and die if path wrong/non-existanse.
 
-0.21	2011/06/27
-	Add methods: hash_add, file_add, dir_add.
-	Improve test and documentation
+0.23		2011/06/27
+				Fix misstyping key_conversation -> key_conversion property
+
+0.21		2011/06/27
+				Add methods: hash_add, file_add, dir_add.
+				Improve test and documentation
 
 0.15    2011/06/26
         First version, beta-version with documentation.
