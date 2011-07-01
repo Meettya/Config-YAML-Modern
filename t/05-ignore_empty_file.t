@@ -8,8 +8,8 @@ use File::Basename qw/dirname/;
 use File::Spec;
 
 # for develop
-#use lib qw(./lib/);
-#use Smart::Comments;
+# use lib qw(./lib/);
+# use Smart::Comments;
 
 BEGIN { use_ok('Config::YAML::Modern') };
 
@@ -54,7 +54,7 @@ is_deeply( $config1->config(), $config_check->config(), 'empty file ignored on d
 
 note('load file with data and append empty data');
 $path_file2 = File::Spec->catfile( ( @directories, $data_dir ), $filename1 );
-$config1->file_load($path_file2);
+$config1->file_load($path_file2); # loading t/data/empty
 
 my $result = $config1->config();
 

@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.29
+Version 0.31
 
 =cut
 
-our $VERSION = '0.29';
+our $VERSION = '0.31';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -122,17 +122,17 @@ File suffix, used in search files in directory for matching. '.yaml' by default.
 
 =item C<key_conversion>
 Rule for conversion parts of filename to hash keys.
-Available [undef, uc, ucfirst, lc, lcfirst]. No conversion 'undef' by default.
+Available values are [undef, uc, ucfirst, lc, lcfirst]. No conversion  - 'undef' by default.
 
 =item C<i_dont_use_suffix>
-Set to true if you not use suffix on config files. Suffix used by default - 'undef'.
+Set to true if you not use suffix on config files. Suffix is used by default - 'undef'.
 
 =item C<__force_return_data>
 If setted to true, methods: file_load(), dir_load(), hash_add(), file_add() and dir_add()
 returns dataset instead of $self, returned by default - 'undef'.
 !!! important - in this case loaded or added data are NOT BE STORED in object, use it well
 
-=itemc<ignore_empty_file>
+=item C<ignore_empty_file>
 If setted to true method:
 	- file_load() will return or assign to object empty flat hash without created keys by file name - just {}.
 	- dir_load() will ignore empty files and not been add keys by names of empty files at all

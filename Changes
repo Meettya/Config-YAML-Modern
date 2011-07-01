@@ -1,8 +1,10 @@
 Revision history for Config-YAML-Modern
 
+0.31		2011/07/01
+				Fix 'error on parsing file |t/data/empty|', fix misstyping in doc
+
 0.29		2011/06/28
-				Fix methods: hash_add, file_add, dir_add  - 
-				in case of empty 'winner' hash now object not been vanished anymore.
+				Big improve - add 'ignore_empty_file' property.
 
 0.27		2011/06/28
 				Fix method dive - now its wrapper on Data::Diver->Dive and allow wrong/non-existanse path
