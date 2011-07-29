@@ -1,5 +1,8 @@
 Revision history for Config-YAML-Modern
 
+0.32		2011/07/29
+				Fix searching files without extention, fix doc
+
 0.31		2011/07/01
 				Fix 'error on parsing file |t/data/empty|', fix misstyping in doc
 

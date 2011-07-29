@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.31
+Version 0.32
 
 =cut
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -115,7 +115,9 @@ The options currently supported are:
 =over
 
 =item C<merge_behavior>
-behavior on merge data, see L<Hash::Merge> docs. 'LEFT_PRECEDENT' by default.
+behavior on merge data, see L<Hash::Merge> docs. 
+Available values are [LEFT_PRECEDENT, RIGHT_PRECEDENT, STORAGE_PRECEDENT, RETAINMENT_PRECEDENT],
+'LEFT_PRECEDENT' by default.
 
 =item C<file_suffix>
 File suffix, used in search files in directory for matching. '.yaml' by default.
@@ -348,14 +350,19 @@ $get_files_list = sub {
 		
 	}
 	else {
-		$glob .= '*';
+		$glob = '*'; # yes, just '*' pattern
 	}
 
 	my $full_pattern = File::Spec->catfile( $dir, $glob );
 	
 	# get all files in our dir
 	# REMEMBER!! no recursive search and e.t.c. - just plain dir scan!!!
-	my @file_list = bsd_glob( $full_pattern );
+	my @file_list = bsd_glob( $full_pattern, GLOB_MARK );
+	
+	# so, we are must filter directory in this case
+	if ( defined $self->{'i_dont_use_suffix'} ){
+		@file_list = grep {!m'/$'} @file_list;
+	}
 	
 	croak sprintf $err_text->[7], $glob, $dir while ( $#file_list < 0 ); 
 	
