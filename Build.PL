@@ -24,6 +24,11 @@ my $builder = Module::Build->new(
     },
     add_to_cleanup      => [ 'Config-YAML-Modern-*' ],
     create_makefile_pl => 'traditional',
+    meta_merge     => {
+    	resources => {
+      	repository  => 'https://github.com/Meettya/Config-YAML-Modern/'
+    }
+  },
 );
 
 $builder->create_build_script();
