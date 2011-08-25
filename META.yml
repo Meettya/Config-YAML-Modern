@@ -28,4 +28,5 @@ requires:
   perl: 5.008
 resources:
   license: http://dev.perl.org/licenses/
+  repository: https://github.com/Meettya/Config-YAML-Modern/
 version: 0.34

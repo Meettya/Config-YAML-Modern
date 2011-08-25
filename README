@@ -15,7 +15,7 @@ It may be used like
 
 		my $file_content = $conf_object->dive(qw/file data/);
 
-Also module have x_add() methods for easily merge one config with another.
+Also module have add_x() methods for easily merge one config with another.
 
 INSTALLATION
 
@@ -25,6 +25,10 @@ To install this module, run the following commands:
 	./Build
 	./Build test
 	./Build install
+
+DEVELOPMENT
+  
+    https://github.com/Meettya/Config-YAML-Modern
 
 SUPPORT AND DOCUMENTATION
 
