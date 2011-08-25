@@ -1,5 +1,8 @@
 Revision history for Config-YAML-Modern
 
+0.34		2011/08/25
+				New interface, old method names mark as deprecated, fix docs
+
 0.32		2011/07/29
 				Fix searching files without extention, fix doc
 

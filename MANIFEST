@@ -10,7 +10,7 @@ README
 t/00-load.t
 t/02-load_file.t
 t/03-load_dir.t
-t/04-x_add.t
+t/04-add_x.t
 t/05-ignore_empty_file.t
 t/boilerplate.t
 t/data/another.file
