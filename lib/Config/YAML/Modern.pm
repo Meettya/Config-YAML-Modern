@@ -10,11 +10,11 @@ Config::YAML::Modern - Modern YAML-based config loader from file or directory.
 
 =head1 VERSION
 
-Version 0.34
+Version 0.36
 
 =cut
 
-our $VERSION = '0.34';
+our $VERSION = '0.36';
 $VERSION = eval $VERSION;
 
 # develop mode only
@@ -40,11 +40,16 @@ use Hash::Merge;
 =head1 SYNOPSIS
 
 Config::YAML::Modern created to get dial with yaml-based configuration.
+
 Its possible to load single file, or all files in one directory (without recursion search).
+
 Data from many files was be merged properly (almost), also filename was be converted
 to top-level hash keys.
+
 Filename like 'file.data.yaml' was be converted to { file => { data => $file_content } }.
+
 Also module provide perfect dive() interface form Data::Diver.
+
 It may be used like 
 
 	my $file_content = $conf_object->dive(qw/file data/);
@@ -115,6 +120,7 @@ The options currently supported are:
 
 =item * C<merge_behavior>
 behavior on merge data, see L<Hash::Merge> docs. 
+
 Available values are [LEFT_PRECEDENT, RIGHT_PRECEDENT, STORAGE_PRECEDENT, RETAINMENT_PRECEDENT],
 'LEFT_PRECEDENT' by default.
 
@@ -123,6 +129,7 @@ File suffix, used in search files in directory for matching. '.yaml' by default.
 
 =item * C<key_conversion>
 Rule for conversion parts of filename to hash keys.
+
 Available values are [undef, uc, ucfirst, lc, lcfirst]. No conversion  - 'undef' by default.
 
 =item * C<i_dont_use_suffix>
@@ -131,13 +138,18 @@ Set to true if you not use suffix on config files. Suffix is used by default - '
 =item * C<__force_return_data>
 If setted to true, methods: load_file(), load_dir(), add_hash(), add_file() and add_dir()
 returns dataset instead of $self, returned by default - 'undef'.
+
 !!! important - in this case loaded or added data are NOT BE STORED in object, use it well
 
 =item * C<ignore_empty_file>
 If setted to true method:
+
 	- load_file() will return or assign to object empty flat hash without created keys by file name - just {}.
+
 	- load_dir() will ignore empty files and not been add keys by names of empty files at all
+
 	- add_file() and add_dir() will ignore empty files and not use it in merge process
+
 By default empty files NOT ignored, value by default - 'undef'.
 
 =back
